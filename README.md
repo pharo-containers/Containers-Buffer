@@ -45,25 +45,6 @@ stream := 'huge-dataset.csv' asFileReference readStream.
 "Memory usage stays constant - handles files of any size!"
 ```
 
-### Memory Disasters
-```smalltalk
-"OrderedCollection - Memory grows until crash"
-data := OrderedCollection new.
-[ true ] whileTrue: [
-    data add: self getStreamingData.
-    "DISASTER: Memory keeps growing... eventually system crashes!"
-    "After 1 million items: ~500MB+ RAM usage"
-].
-
-"Buffer - Rock-solid memory usage"
-data := CTBuffer withCapacity: 1000.
-[ true ] whileTrue: [
-    data put: self getStreamingData.
-    "SAFE: Memory stays constant forever - perfect for 24/7 systems"
-    "Always exactly 1000 items: ~50KB RAM usage"
-].
-```
-
 ### Performance Degradation
 ```smalltalk
 "OrderedCollection - Gets slower and slower"
