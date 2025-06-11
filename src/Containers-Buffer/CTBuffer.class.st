@@ -8,20 +8,30 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'elements',
-		'maxCapacity',
 		'readIndex',
 		'writeIndex',
-		'currentSize'
+		'currentSize',
+		'capacity'
 	],
 	#category : 'Containers-Buffer',
 	#package : 'Containers-Buffer'
 }
 
+{ #category : 'instance creation' }
+CTBuffer class >> withCapacity: anInteger [
+
+    anInteger < 1 ifTrue: [ self error: 'Capacity must be not negative' ].
+
+    ^ self new
+          capacity: anInteger;
+          yourself
+]
+
 { #category : 'accessing' }
 CTBuffer >> availableSpace [
 		"Return the number of additional elements that can be stored"
 	
-	^ maxCapacity - currentSize
+	^ capacity - currentSize
 ]
 
 { #category : 'accessing' }
@@ -29,11 +39,46 @@ CTBuffer >> capacity [
 
 	"Return the maximum capacity of the buffer"
 	
-	^ maxCapacity
+	^ capacity
+]
+
+{ #category : 'accessing' }
+CTBuffer >> capacity: anInteger [
+
+    capacity := anInteger.
+    elements := Array new: capacity
+]
+
+{ #category : 'accessing' }
+CTBuffer >> elements [
+	^ elements
+]
+
+{ #category : 'initialization' }
+CTBuffer >> initialize [
+
+    super initialize.
+    capacity := 10.
+    elements := Array new: capacity.
+    readIndex := 1.
+    writeIndex := 1.
+    currentSize := 0
+]
+
+{ #category : 'testing' }
+CTBuffer >> isEmpty [
+
+    ^ currentSize = 0
+]
+
+{ #category : 'testing' }
+CTBuffer >> isFull [
+
+    ^ currentSize = capacity
 ]
 
 { #category : 'actions api' }
-CTBuffer >> get [
+CTBuffer >> pop [
 
 	"Remove and return the oldest element"
 
@@ -42,54 +87,9 @@ CTBuffer >> get [
 
 	element := elements at: readIndex.
 	elements at: readIndex put: nil.
-	readIndex := readIndex \\ maxCapacity + 1.
+	readIndex := readIndex \\ capacity + 1.
 	currentSize := currentSize - 1.
 	^ element
-]
-
-{ #category : 'initialization' }
-CTBuffer >> initialize [
-
-	"Initialize the buffer with default capacity"
-	
-	super initialize.
-	self initializeWithCapacity: 10
-]
-
-{ #category : 'initialization' }
-CTBuffer >> initializeWithCapacity: anInteger [
-
-	"Initialize the buffer with specified capacity"
-	
-	maxCapacity := anInteger.
-	elements := Array new: maxCapacity.
-	readIndex := 1.
-	writeIndex := 1.
-	currentSize := 0
-]
-
-{ #category : 'testing' }
-CTBuffer >> isEmpty [
-
-		"Return true if buffer has no elements"
-	
-	^ currentSize = 0
-]
-
-{ #category : 'testing' }
-CTBuffer >> isFull [
-
-		"Return true if buffer is at maximum capacity"
-	
-	^ currentSize = maxCapacity
-]
-
-{ #category : 'instance creation' }
-CTBuffer >> new [
-
-		"Create a new buffer with default capacity of 10"
-	
-	^ self withCapacity: 10
 ]
 
 { #category : 'actions api' }
@@ -98,30 +98,40 @@ CTBuffer >> put: anObject [
 	"Add an element to the buffer. If full, overwrites oldest element"
 	
 	elements at: writeIndex put: anObject.
-	writeIndex := writeIndex \\ maxCapacity + 1.
+	writeIndex := writeIndex \\ capacity + 1.
 	
 	self isFull 
-		ifTrue: [ readIndex := readIndex \\ maxCapacity + 1 ]
+		ifTrue: [ readIndex := readIndex \\ capacity + 1 ]
 		ifFalse: [ currentSize := currentSize + 1 ].
 		
 	^ anObject
 ]
 
+{ #category : 'actions api' }
+CTBuffer >> putAll: aCollection [
+
+    aCollection do: [ :e | self put: e ].
+    ^ aCollection last
+]
+
+{ #category : 'accessing' }
+CTBuffer >> readIndex [
+	^ readIndex
+]
+
 { #category : 'accessing' }
 CTBuffer >> size [
 
-		"Return the current number of elements in the buffer"
-	
-	^ currentSize
+    ^ currentSize
 ]
 
-{ #category : 'instance creation' }
-CTBuffer >> withCapacity: anInteger [
+{ #category : 'actions api' }
+CTBuffer >> top [
 
-	"Create a new buffer with specified capacity"
-	
-	anInteger < 1 ifTrue: [ self error: 'Capacity must be positive' ].
-	^ self new
-		initializeWithCapacity: anInteger;
-		yourself
+    ^ elements at: readIndex
+]
+
+{ #category : 'accessing' }
+CTBuffer >> writeIndex [
+	^ writeIndex
 ]
