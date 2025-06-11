@@ -32,6 +32,21 @@ CTBuffer >> capacity [
 	^ maxCapacity
 ]
 
+{ #category : 'actions api' }
+CTBuffer >> get [
+
+	"Remove and return the oldest element"
+
+	| element |
+	self isEmpty ifTrue: [ self error: 'Buffer is empty' ].
+
+	element := elements at: readIndex.
+	elements at: readIndex put: nil.
+	readIndex := readIndex \\ maxCapacity + 1.
+	currentSize := currentSize - 1.
+	^ element
+]
+
 { #category : 'initialization' }
 CTBuffer >> initialize [
 
@@ -75,6 +90,21 @@ CTBuffer >> new [
 		"Create a new buffer with default capacity of 10"
 	
 	^ self withCapacity: 10
+]
+
+{ #category : 'actions api' }
+CTBuffer >> put: anObject [
+
+	"Add an element to the buffer. If full, overwrites oldest element"
+	
+	elements at: writeIndex put: anObject.
+	writeIndex := writeIndex \\ maxCapacity + 1.
+	
+	self isFull 
+		ifTrue: [ readIndex := readIndex \\ maxCapacity + 1 ]
+		ifFalse: [ currentSize := currentSize + 1 ].
+		
+	^ anObject
 ]
 
 { #category : 'accessing' }
