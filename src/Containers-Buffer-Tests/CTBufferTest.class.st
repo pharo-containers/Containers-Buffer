@@ -5,7 +5,8 @@ Class {
 	#name : 'CTBufferTest',
 	#superclass : 'TestCase',
 	#instVars : [
-		'buffer'
+		'fifoBuffer',
+		'lifoBuffer'
 	],
 	#category : 'Containers-Buffer-Tests',
 	#package : 'Containers-Buffer-Tests'
@@ -13,143 +14,41 @@ Class {
 
 { #category : 'running' }
 CTBufferTest >> setUp [
-
-    super setUp.
-    buffer := CTBuffer new
+super setUp.
+	fifoBuffer := CTFIFOBuffer withCapacity: 3.
+	lifoBuffer := CTLIFOBuffer withCapacity: 3
 ]
 
 { #category : 'tests' }
-CTBufferTest >> testAvailableSize [
+CTBufferTest >> testBufferCreationWithCapacity [
 
-    buffer := CTBuffer withCapacity: 10.
-    buffer
-        put: 4;
-        put: 5.
-
-    self assert: buffer availableSpace equals: 8
-]
-
-{ #category : 'tests' }
-CTBufferTest >> testAvailableSizeWhenExcedeedCapacity [
-
-    buffer := CTBuffer withCapacity: 4.
-
-    1 to: 10 do: [ :i | buffer put: i ].
-    self assert: buffer availableSpace equals: 0.
-
-    buffer pop.
-    self assert: buffer availableSpace equals: 1.
-
-    buffer pop.
-    self assert: buffer availableSpace equals: 2
-]
-
-{ #category : 'tests' }
-CTBufferTest >> testEmptyBuffer [
-
-    self assert: buffer isEmpty.
-    self should: [ buffer get ] raise: Error
-]
-
-{ #category : 'tests' }
-CTBufferTest >> testIndeces [
-
-	buffer := CTBuffer withCapacity: 4.
-	self assert: buffer readIndex equals: 1.
-	self assert: buffer writeIndex equals: 1.
-
-	buffer put: 1.
-	self assert: buffer readIndex equals: 1.
-	self assert: buffer writeIndex equals: 2.
 	
-	buffer put: 1.
-	self assert: buffer readIndex equals: 1.
-	self assert: buffer writeIndex equals: 3.
+	| buffer |
+	buffer := CTFIFOBuffer withCapacity: 5.
 	
-	buffer put: 1.
-	self assert: buffer readIndex equals: 1.
-	self assert: buffer writeIndex equals: 4.
+	self assert: buffer capacity equals: 5.
+	self assert: buffer size equals: 0.
+	self assert: buffer isEmpty.
+	self deny: buffer isFull.
+	self assert: buffer availableSpace equals: 5
+]
+
+{ #category : 'tests' }
+CTBufferTest >> testBufferCreationWithInvalidCapacity [
 	
-	buffer put: 1.
-	self assert: buffer readIndex equals: 1.
-	self assert: buffer writeIndex equals: 1.
+	self should: [ CTFIFOBuffer withCapacity: 0 ] raise: Error.
+	self should: [ CTFIFOBuffer withCapacity: -1 ] raise: Error.
+	self should: [ CTLIFOBuffer withCapacity: 0 ] raise: Error
+]
 
-	buffer put: 1.
-	self assert: buffer readIndex equals: 2.
-	self assert: buffer writeIndex equals: 2.
+{ #category : 'tests' }
+CTBufferTest >> testDefaultBufferCreation [
+
+	| buffer |
+	buffer := CTFIFOBuffer new.
 	
-	buffer pop.
-	self assert: buffer readIndex equals: 3.
-	self assert: buffer writeIndex equals: 2
-]
-
-{ #category : 'tests' }
-CTBufferTest >> testPop [
-
-    self assert: buffer isEmpty.
-    buffer put: 'test'.
-    self deny: buffer isEmpty.
-
-    self assert: buffer pop equals: 'test'.
-    self assert: buffer isEmpty
-]
-
-{ #category : 'tests' }
-CTBufferTest >> testPut [
-
-    buffer put: 'first'.
-    self deny: buffer isEmpty.
-
-    buffer pop.
-    self assert: buffer isEmpty.
-
-    buffer put: 'second'.
-    self deny: buffer isEmpty
-]
-
-{ #category : 'tests' }
-CTBufferTest >> testPutAll [
-
-    buffer := CTBuffer withCapacity: 4.
-    buffer putAll: (1 to: 6).
-
-    self assert: buffer size equals: 4.
-
-    self assertCollection: buffer elements hasSameElements: #( 5 6 3 4 ).
-
-    self assert: buffer pop equals: 3.
-    self assert: buffer pop equals: 4.
-    self assert: buffer pop equals: 5.
-    self assert: buffer pop equals: 6.
-
-    self assert: buffer isEmpty
-]
-
-{ #category : 'tests' }
-CTBufferTest >> testPutWhenSizeExcedeesCapacity [
-
-    buffer := CTBuffer withCapacity: 4.
-    1 to: 6 do: [ :i | buffer put: i ].
-
-    self assert: buffer size equals: 4.
-
-    self assertCollection: buffer elements hasSameElements: #( 5 6 3 4 ).
-
-    self assert: buffer pop equals: 3.
-    self assert: buffer pop equals: 4.
-    self assert: buffer pop equals: 5.
-    self assert: buffer pop equals: 6.
-
-    self assert: buffer isEmpty
-]
-
-{ #category : 'tests' }
-CTBufferTest >> testTop [
-
-    buffer
-        put: 4;
-        put: 5.
-
-    self assert: buffer top equals: 4.
-    self assert: buffer size equals: 2
+	self assert: buffer capacity equals: 10.
+	self assert: buffer isEmpty.
+	self assert: buffer readIndex equals: 1.
+	self assert: buffer writeIndex equals: 1
 ]
