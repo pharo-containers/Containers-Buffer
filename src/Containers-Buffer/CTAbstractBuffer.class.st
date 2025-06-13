@@ -43,8 +43,6 @@ CTAbstractBuffer >> capacity [
 { #category : 'accessing' }
 CTAbstractBuffer >> capacity: anInteger [
 
-		"Set the capacity and initialize elements array"
-	
 	capacity := anInteger.
 	elements := Array new: capacity
 ]
@@ -58,6 +56,23 @@ CTAbstractBuffer >> clear [
 	readIndex := 1.
 	writeIndex := 1.
 	currentSize := 0
+]
+
+{ #category : 'copying' }
+CTAbstractBuffer >> copy [
+
+	"Return a copy of the buffer with same contents"
+	
+	| copy |
+	copy := self class withCapacity: capacity.
+	self do: [ :each | copy push: each ].
+	^ copy
+]
+
+{ #category : 'enumerating' }
+CTAbstractBuffer >> do: aBlock [
+
+	^ self subclassResponsibility
 ]
 
 { #category : 'accessing' }
@@ -105,14 +120,14 @@ CTAbstractBuffer >> peek [
 
 { #category : 'removing' }
 CTAbstractBuffer >> pop [
-
 	"Remove and return element from readIndex position"
-	
+
 	| element |
 	self isEmpty ifTrue: [ self error: 'Buffer is empty' ].
-	
+
 	element := elements at: readIndex.
 	elements at: readIndex put: nil.
+
 	self updateReadIndex.
 	currentSize := currentSize - 1.
 	^ element
@@ -120,9 +135,8 @@ CTAbstractBuffer >> pop [
 
 { #category : 'testing' }
 CTAbstractBuffer >> push: anObject [
-
 	"Add an element to the buffer"
-	
+
 	elements at: writeIndex put: anObject.
 	
 	currentSize = 0
@@ -151,26 +165,20 @@ CTAbstractBuffer >> push: anObject [
 { #category : 'testing' }
 CTAbstractBuffer >> pushAll: aCollection [
 
-	"Add all elements from aCollection to the buffer"
-	
 	aCollection do: [ :e | self push: e ].
 	^ aCollection isEmpty ifFalse: [ aCollection last ]
 ]
 
 { #category : 'accessing' }
 CTAbstractBuffer >> readIndex [
-
-	"Return the current read index"
 	
-	^ readIndex
 
+	^ readIndex
 ]
 
 { #category : 'accessing' }
 CTAbstractBuffer >> size [
 
-	"Return the current number of elements in the buffer"
-	
 	^ currentSize
 ]
 
@@ -199,9 +207,7 @@ CTAbstractBuffer >> updateReadIndexForOverwrite [
 ]
 
 { #category : 'accessing' }
-CTAbstractBuffer >> writeIndex [
+CTAbstractBuffer >> writeIndex [ 
 
-	"Return the current write index"
-	
 	^ writeIndex
 ]

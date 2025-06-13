@@ -9,6 +9,23 @@ Class {
 	#package : 'Containers-Buffer'
 }
 
+{ #category : 'enumerating' }
+CTLIFOBuffer >> do: aBlock [
+
+	"Iterate over all elements from newest to oldest"
+	
+	| index |
+	self isEmpty ifTrue: [ ^ self ].
+	
+	index := readIndex.
+	currentSize timesRepeat: [
+		aBlock value: (elements at: index).
+		index := index = 1 
+			ifTrue: [ capacity ]
+			ifFalse: [ index - 1 ]
+	]
+]
+
 { #category : 'private' }
 CTLIFOBuffer >> updateReadIndex [
 
