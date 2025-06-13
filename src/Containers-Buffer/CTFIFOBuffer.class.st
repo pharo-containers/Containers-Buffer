@@ -47,3 +47,9 @@ CTFIFOBuffer >> updateReadIndexForOverwrite [
 	readIndex := readIndex \\ capacity + 1
 
 ]
+
+{ #category : 'private' }
+CTFIFOBuffer >> updateWriteIndexAfterPop: poppedIndex [
+
+	"Do nothing - writeIndex continues in sequence"
+]

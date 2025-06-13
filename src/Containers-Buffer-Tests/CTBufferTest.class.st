@@ -1,5 +1,5 @@
 "
-A CTBufferTest is a test class for testing the behavior of CTBuffer
+Comprehensive test suite for CTBuffer classes including CTFIFOBuffer and CTLIFOBuffer.
 "
 Class {
 	#name : 'CTBufferTest',

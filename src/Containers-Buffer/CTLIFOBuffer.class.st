@@ -51,3 +51,10 @@ CTLIFOBuffer >> updateReadIndexForOverwrite [
 	
 	readIndex := writeIndex
 ]
+
+{ #category : 'private' }
+CTLIFOBuffer >> updateWriteIndexAfterPop: poppedIndex [
+
+	"Update writeIndex after popping an element - subclass responsibility"
+	writeIndex := poppedIndex
+]

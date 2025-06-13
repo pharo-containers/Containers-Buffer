@@ -122,13 +122,15 @@ CTAbstractBuffer >> peek [
 CTAbstractBuffer >> pop [
 	"Remove and return element from readIndex position"
 
-	| element |
+	| element poppedIndex|
 	self isEmpty ifTrue: [ self error: 'Buffer is empty' ].
-
+	
 	element := elements at: readIndex.
 	elements at: readIndex put: nil.
+	poppedIndex := readIndex.
 
 	self updateReadIndex.
+	self updateWriteIndexAfterPop: poppedIndex.
 	currentSize := currentSize - 1.
 	^ element
 ]
@@ -202,6 +204,14 @@ CTAbstractBuffer >> updateReadIndexForAdd [
 CTAbstractBuffer >> updateReadIndexForOverwrite [
 
 	"Update readIndex when overwriting an element - subclass responsibility"
+	
+	self subclassResponsibility
+]
+
+{ #category : 'private' }
+CTAbstractBuffer >> updateWriteIndexAfterPop: poppedIndex [
+
+	"Update writeIndex after popping an element - subclass responsibility"
 	
 	self subclassResponsibility
 ]
