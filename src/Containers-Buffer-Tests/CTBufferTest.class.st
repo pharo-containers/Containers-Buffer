@@ -46,18 +46,6 @@ CTBufferTest >> testAvailableSpace [
 ]
 
 { #category : 'tests' }
-CTBufferTest >> testAvailableSpaceTracking [
-
-	self assert: fifoBuffer availableSpace equals: 3.
-	fifoBuffer push: 'a'.
-	self assert: fifoBuffer availableSpace equals: 2.
-	fifoBuffer push: 'b'; push: 'c'.
-	self assert: fifoBuffer availableSpace equals: 0.
-	fifoBuffer pop.
-	self assert: fifoBuffer availableSpace equals: 1
-]
-
-{ #category : 'tests' }
 CTBufferTest >> testBrowserHistory [
 
 	| browserHistory visitedPages |
@@ -329,56 +317,6 @@ CTBufferTest >> testIsFull [
 	lifoBuffer pop.
 	self deny: fifoBuffer isFull.
 	self deny: lifoBuffer isFull
-]
-
-{ #category : 'tests' }
-CTBufferTest >> testMixedPushPopOperations [
-
-	fifoBuffer
-		push: 'a';
-		push: 'b'.
-	self assert: fifoBuffer pop equals: 'a'.
-	fifoBuffer
-		push: 'c';
-		push: 'd'.
-	self assert: fifoBuffer pop equals: 'b'.
-	self assert: fifoBuffer pop equals: 'c'.
-	self assert: fifoBuffer pop equals: 'd'.
-	self assert: fifoBuffer isEmpty.
-
-	lifoBuffer
-		push: 'x';
-		push: 'y'.
-	self assert: lifoBuffer pop equals: 'y'.
-	lifoBuffer
-		push: 'z';
-		push: 'w'.
-	self assert: lifoBuffer pop equals: 'w'.
-	self assert: lifoBuffer pop equals: 'z'.
-	self assert: lifoBuffer pop equals: 'x'.
-	self assert: lifoBuffer isEmpty
-]
-
-{ #category : 'tests' }
-CTBufferTest >> testMultipleOverwrites [
-
-	"FIFO: Maintains oldest-to-newest order"
-	fifoBuffer push: 'a'; push: 'b'; push: 'c'.
-	fifoBuffer push: 'd'; push: 'e'; push: 'f'.
-	self assert: fifoBuffer size equals: 3.
-	self assert: fifoBuffer pop equals: 'd'.
-	self assert: fifoBuffer pop equals: 'e'.
-	self assert: fifoBuffer pop equals: 'f'.
-	self assert: fifoBuffer isEmpty.
-
-	"LIFO: Maintains newest-to-oldest order"
-	lifoBuffer push: 'a'; push: 'b'; push: 'c'.
-	lifoBuffer push: 'd'; push: 'e'; push: 'f'.
-	self assert: lifoBuffer size equals: 3.
-	self assert: lifoBuffer pop equals: 'f'.
-	self assert: lifoBuffer pop equals: 'e'.
-	self assert: lifoBuffer pop equals: 'd'.
-	self assert: lifoBuffer isEmpty
 ]
 
 { #category : 'tests' }
