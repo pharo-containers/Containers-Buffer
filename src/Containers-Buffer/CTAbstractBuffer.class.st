@@ -49,6 +49,17 @@ CTAbstractBuffer >> capacity: anInteger [
 	elements := Array new: capacity
 ]
 
+{ #category : 'actions' }
+CTAbstractBuffer >> clear [
+
+		"Remove all elements from the buffer"
+	
+	1 to: capacity do: [ :i | elements at: i put: nil ].
+	readIndex := 1.
+	writeIndex := 1.
+	currentSize := 0
+]
+
 { #category : 'accessing' }
 CTAbstractBuffer >> elements [
 
@@ -84,6 +95,69 @@ CTAbstractBuffer >> isFull [
 ]
 
 { #category : 'accessing' }
+CTAbstractBuffer >> peek [
+
+		"Return next element to be retrieved without removing it"
+	
+	self isEmpty ifTrue: [ self error: 'Buffer is empty' ].
+	^ elements at: readIndex
+]
+
+{ #category : 'removing' }
+CTAbstractBuffer >> pop [
+
+	"Remove and return element from readIndex position"
+	
+	| element |
+	self isEmpty ifTrue: [ self error: 'Buffer is empty' ].
+	
+	element := elements at: readIndex.
+	elements at: readIndex put: nil.
+	self updateReadIndex.
+	currentSize := currentSize - 1.
+	^ element
+]
+
+{ #category : 'testing' }
+CTAbstractBuffer >> push: anObject [
+
+	"Add an element to the buffer"
+	
+	elements at: writeIndex put: anObject.
+	
+	currentSize = 0
+		ifTrue: [
+			"Very first element - both FIFO and LIFO point readIndex to it"
+			readIndex := writeIndex.
+			currentSize := 1.
+		]
+		ifFalse: [
+			self isFull
+				ifTrue: [
+					"Buffer is full - we just overwrote an element"
+					self updateReadIndexForOverwrite.
+				]
+				ifFalse: [
+					"Normal case - adding to non-full buffer"
+					self updateReadIndexForAdd.
+					currentSize := currentSize + 1.
+				].
+		].
+	
+	writeIndex := writeIndex \\ capacity + 1.
+	^ anObject
+]
+
+{ #category : 'testing' }
+CTAbstractBuffer >> pushAll: aCollection [
+
+	"Add all elements from aCollection to the buffer"
+	
+	aCollection do: [ :e | self push: e ].
+	^ aCollection isEmpty ifFalse: [ aCollection last ]
+]
+
+{ #category : 'accessing' }
 CTAbstractBuffer >> readIndex [
 
 	"Return the current read index"
@@ -98,6 +172,30 @@ CTAbstractBuffer >> size [
 	"Return the current number of elements in the buffer"
 	
 	^ currentSize
+]
+
+{ #category : 'private' }
+CTAbstractBuffer >> updateReadIndex [
+
+		"Update readIndex after pop or overwrite - subclass responsibility"
+	
+	self subclassResponsibility
+]
+
+{ #category : 'private' }
+CTAbstractBuffer >> updateReadIndexForAdd [
+
+	"Update readIndex when adding new element - subclass responsibility"
+	
+	self subclassResponsibility
+]
+
+{ #category : 'private' }
+CTAbstractBuffer >> updateReadIndexForOverwrite [
+
+	"Update readIndex when overwriting an element - subclass responsibility"
+	
+	self subclassResponsibility
 ]
 
 { #category : 'accessing' }
