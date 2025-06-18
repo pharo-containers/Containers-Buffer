@@ -61,12 +61,7 @@ CTAbstractBuffer >> clear [
 { #category : 'copying' }
 CTAbstractBuffer >> copy [
 
-	"Return a copy of the buffer with same contents"
-	
-	| copy |
-	copy := self class withCapacity: capacity.
-	self do: [ :each | copy push: each ].
-	^ copy
+	^ self subclassResponsibility
 ]
 
 { #category : 'enumerating' }
