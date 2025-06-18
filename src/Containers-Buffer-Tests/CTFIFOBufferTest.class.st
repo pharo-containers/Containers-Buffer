@@ -1,3 +1,7 @@
+"
+Test class for FIFO (First In, First Out) buffer implementation.
+Tests FIFO-specific ordering behavior and includes real-world usage examples.
+"
 Class {
 	#name : 'CTFIFOBufferTest',
 	#superclass : 'CTAbstractBufferTest',

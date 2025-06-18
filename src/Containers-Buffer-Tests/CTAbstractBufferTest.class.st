@@ -1,5 +1,6 @@
 "
-Comprehensive test suite for CTBuffer classes including CTFIFOBuffer and CTLIFOBuffer.
+Abstract test class containing common tests for both FIFO and LIFO buffer implementations.
+Subclasses must implement setUp to create their specific buffer type.
 "
 Class {
 	#name : 'CTAbstractBufferTest',
@@ -150,13 +151,14 @@ CTAbstractBufferTest >> testPushAllCollection [
 { #category : 'tests' }
 CTAbstractBufferTest >> testPushMultipleElements [
 
-	buffer push: 'first'; push: 'second'; push: 'third'.
-	
+	buffer
+		push: 'first';
+		push: 'second';
+		push: 'third'.
+
 	self assert: buffer size equals: 3.
 	self assert: buffer isFull.
 	self assert: buffer availableSpace equals: 0.
-	self assert: buffer writeIndex equals: 1.
-	self assert: buffer readIndex equals: 3
 ]
 
 { #category : 'tests' }

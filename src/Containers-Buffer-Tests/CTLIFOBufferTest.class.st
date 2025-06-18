@@ -1,3 +1,7 @@
+"
+Test class for LIFO (Last In, First Out) buffer implementation.
+Tests LIFO-specific ordering behavior and includes real-world usage examples.
+"
 Class {
 	#name : 'CTLIFOBufferTest',
 	#superclass : 'CTAbstractBufferTest',
