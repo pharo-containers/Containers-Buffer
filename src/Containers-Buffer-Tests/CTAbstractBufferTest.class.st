@@ -64,6 +64,11 @@ CTAbstractBufferTest >> testClearBuffer [
 ]
 
 { #category : 'tests' }
+CTAbstractBufferTest >> testCopyBufferContentsOrder [
+	^ self subclassResponsibility
+]
+
+{ #category : 'tests' }
 CTAbstractBufferTest >> testDefaultBufferCreation [
 
 	| testBuffer |
@@ -73,6 +78,16 @@ CTAbstractBufferTest >> testDefaultBufferCreation [
 	self assert: testBuffer isEmpty.
 	self assert: testBuffer readIndex equals: 1.
 	self assert: testBuffer writeIndex equals: 1
+]
+
+{ #category : 'tests' }
+CTAbstractBufferTest >> testDoIteration [
+	^ self subclassResponsibility
+]
+
+{ #category : 'tests' }
+CTAbstractBufferTest >> testDoIterationAfterOverwrite [
+	^ self subclassResponsibility
 ]
 
 { #category : 'tests' }
@@ -114,6 +129,11 @@ CTAbstractBufferTest >> testIsFull [
 ]
 
 { #category : 'tests' }
+CTAbstractBufferTest >> testOverwriteBehavior [
+	^ self subclassResponsibility
+]
+
+{ #category : 'tests' }
 CTAbstractBufferTest >> testOverwriteBehaviorWithAvailableSpace [
 
 	buffer push: 'a'; push: 'b'; push: 'c'.
@@ -122,6 +142,11 @@ CTAbstractBufferTest >> testOverwriteBehaviorWithAvailableSpace [
 	buffer push: 'd'.
 	self assert: buffer availableSpace equals: 0.
 	self assert: buffer size equals: 3
+]
+
+{ #category : 'tests' }
+CTAbstractBufferTest >> testPeekAndPop [
+	^ self subclassResponsibility
 ]
 
 { #category : 'tests' }
@@ -175,6 +200,21 @@ CTAbstractBufferTest >> testPushSingleElement [
 ]
 
 { #category : 'tests' }
+CTAbstractBufferTest >> testReadIndexAfterPop [
+	^ self subclassResponsibility
+]
+
+{ #category : 'tests' }
+CTAbstractBufferTest >> testReadIndexBehaviorOnAdd [
+	^ self subclassResponsibility
+]
+
+{ #category : 'tests' }
+CTAbstractBufferTest >> testReadIndexBehaviorOnOverwrite [
+	^ self subclassResponsibility
+]
+
+{ #category : 'tests' }
 CTAbstractBufferTest >> testSize [
 
 	self assert: buffer size equals: 0.
@@ -184,4 +224,14 @@ CTAbstractBufferTest >> testSize [
 	self assert: buffer size equals: 3.
 	buffer pop.
 	self assert: buffer size equals: 2
+]
+
+{ #category : 'tests' }
+CTAbstractBufferTest >> testWriteIndexAfterPopAndOverwrite [
+	^ self subclassResponsibility
+]
+
+{ #category : 'tests' }
+CTAbstractBufferTest >> testWriteIndexBehavior [
+	^ self subclassResponsibility
 ]
