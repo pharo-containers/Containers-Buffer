@@ -8,6 +8,15 @@ Class {
 	#package : 'Containers-Buffer'
 }
 
+{ #category : 'copying' }
+CTFIFOBuffer >> copy [
+
+	| copy |
+	copy := self class withCapacity: capacity.
+	self do: [ :each | copy push: each ].
+	^ copy
+]
+
 { #category : 'enumerating' }
 CTFIFOBuffer >> do: aBlock [
 
