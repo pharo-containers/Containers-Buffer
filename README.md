@@ -61,22 +61,6 @@ chat push: 'User3: Good morning!'.  "Oldest message automatically removed"
 "Always has recent 50 messages, zero manual cleanup"
 ```
 
-### File Processing in Chunks
-This example shows how to process large files in manageable chunks without loading the entire file into memory, using a FIFO buffer to handle data efficiently.
-
-```smalltalk
-"Process massive files without loading everything into memory"
-fileBuffer := CTFIFOBuffer withCapacity: 1024.  "1KB processing chunks"
-stream := 'huge-dataset.csv' asFileReference readStream.
-[ stream atEnd ] whileFalse: [
-    chunk := stream next: 1024.
-    fileBuffer push: chunk.
-    self processDataChunk: fileBuffer pop  "Process and auto-remove"
-].
-
-"Memory usage stays constant - handles files of any size!"
-```
-
 ## LIFO Buffer Use Cases
 
 ### Undo/Redo Functionality
