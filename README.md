@@ -99,7 +99,7 @@ previousPage := browserHistory pop.  "Gets 'https://pharo.org' (third most recen
 ```
 
 
-### Performance Degradation
+### Performance Comparison
 ```smalltalk
 "OrderedCollection - Gets slower and slower"
 log := OrderedCollection new.
@@ -109,15 +109,12 @@ log := OrderedCollection new.
         log removeFirst  "O(n) operation - shifts 999+ elements EVERY TIME!"
     ].
 ].
-"Performance degrades from 1ms to 100ms+ per operation"
 
-"Buffer - Lightning fast forever"
+"Buffer - Fast and automatic"
 log := CTFIFOBuffer withCapacity: 1000.
 1 to: 100000 do: [ :i |
-    log push: 'entry ', i asString.  "O(1) operation - always instant!"
+    log push: 'entry ', i asString.  "O(1) operation - Automatic Management !"
 ].
-
-"Consistent 0.01ms performance whether it's operation #10 or #10,000,000"
 ```
 ### Comparison
 | Operation | OrderedCollection | Array | CTFIFOBuffer |
