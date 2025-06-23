@@ -61,22 +61,6 @@ chat push: 'User3: Good morning!'.  "Oldest message automatically removed"
 "Always has recent 50 messages, zero manual cleanup"
 ```
 
-### File Processing in Chunks
-This example shows how to process large files in manageable chunks without loading the entire file into memory, using a FIFO buffer to handle data efficiently.
-
-```smalltalk
-"Process massive files without loading everything into memory"
-fileBuffer := CTFIFOBuffer withCapacity: 1024.  "1KB processing chunks"
-stream := 'huge-dataset.csv' asFileReference readStream.
-[ stream atEnd ] whileFalse: [
-    chunk := stream next: 1024.
-    fileBuffer push: chunk.
-    self processDataChunk: fileBuffer pop  "Process and auto-remove"
-].
-
-"Memory usage stays constant - handles files of any size!"
-```
-
 ## LIFO Buffer Use Cases
 
 ### Undo/Redo Functionality
@@ -115,7 +99,7 @@ previousPage := browserHistory pop.  "Gets 'https://pharo.org' (third most recen
 ```
 
 
-### Performance Degradation
+### Performance Comparison
 ```smalltalk
 "OrderedCollection - Gets slower and slower"
 log := OrderedCollection new.
@@ -125,15 +109,12 @@ log := OrderedCollection new.
         log removeFirst  "O(n) operation - shifts 999+ elements EVERY TIME!"
     ].
 ].
-"Performance degrades from 1ms to 100ms+ per operation"
 
-"Buffer - Lightning fast forever"
+"Buffer - Fast and automatic"
 log := CTFIFOBuffer withCapacity: 1000.
 1 to: 100000 do: [ :i |
-    log push: 'entry ', i asString.  "O(1) operation - always instant!"
+    log push: 'entry ', i asString.  "O(1) operation - Automatic Management !"
 ].
-
-"Consistent 0.01ms performance whether it's operation #10 or #10,000,000"
 ```
 ### Comparison
 | Operation | OrderedCollection | Array | CTFIFOBuffer |
