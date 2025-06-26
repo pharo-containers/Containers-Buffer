@@ -153,51 +153,79 @@ previousPage := browserHistory pop.
 
 I conducted comprehensive performance tests comparing three approaches i.e Arrays, Circular Buffers & Ordered Collections for maintaining the last 100 items. Here's what the data reveals:
 
-### Test Run 1: Individual Performance
+### Test Run: Average Performance
 
-![](Performance-Single-Run.png)
+```smalltalk
+| totalOperations capacity arrayResults bufferResults orderedCollectionResults arrayMean bufferMean orderedMean arrayVariance bufferVariance orderedVariance |
 
-The first screenshot shows a single test run where I measured the execution time for each approach. You can see in the transcript:
+totalOperations := 1000000.
+capacity := 100.
 
-- **Array**: 66ms
-- **Buffer**: 140ms
-- **OrderedCollection**: 299ms
+arrayResults := OrderedCollection new.
+bufferResults := OrderedCollection new.
+orderedCollectionResults := OrderedCollection new.
 
-This shows the relative performance - OrderedCollection is clearly the slowest due to all those expensive removeFirst operations.
-### Test Run 2: Average Performance
+Transcript show: 'Average result after running each benchmark for 100 times...'; cr.
 
-![](Performance-Average.png)
+100 timesRepeat: [
+    arrayResults add: ([
+        | array currentIndex |
+        array := Array new: capacity.
+        currentIndex := 1.
+        1 to: totalOperations do: [ :i |
+            array at: currentIndex put: i.
+            currentIndex := currentIndex \\ capacity + 1.
+        ].
+    ] timeToRun asMilliSeconds).
+    
+    bufferResults add: ([
+        | buffer |
+        buffer := CTFIFOBuffer withCapacity: capacity.
+        1 to: totalOperations do: [ :i |
+            buffer push: i.
+        ].
+    ] timeToRun asMilliSeconds).
+    
+    orderedCollectionResults add: ([
+        | collection |
+        collection := OrderedCollection new.
+        1 to: totalOperations do: [ :i |
+            collection add: i.
+            collection size > capacity ifTrue: [
+                collection removeFirst.
+            ].
+        ].
+    ] timeToRun asMilliSeconds).
+].
 
-The second screenshot shows the average execution time over 100 test runs. The results are as follows:
+"Calculate averages and variance"
+arrayMean := arrayResults sum / arrayResults size.
+bufferMean := bufferResults sum / bufferResults size.
+orderedMean := orderedCollectionResults sum / orderedCollectionResults size.
 
-- **Array**: ~6 ms
-- **Buffer**: ~14 ms
-- **OrderedCollection**: ~31 ms
+arrayVariance := (arrayResults collect: [ :each | (each - arrayMean) squared ]) sum / arrayResults size.
+bufferVariance := (bufferResults collect: [ :each | (each - bufferMean) squared ]) sum / bufferResults size.
+orderedVariance := (orderedCollectionResults collect: [ :each | (each - orderedMean) squared ]) sum / orderedCollectionResults size.
 
-These averages confirm the trends observed in the individual test run - Circular Buffers provide a solid middle ground between raw speed and ease of use, while Ordered Collections lag behind due to their inherent inefficiencies.
+"Display results"
+Transcript show: 'Array: ', arrayMean rounded asString, ' ms (variance: ', (arrayVariance roundTo: 0.01) asString, ')'; cr.
+Transcript show: 'Buffer: ', bufferMean rounded asString, ' ms (variance: ', (bufferVariance roundTo: 0.01) asString, ')'; cr.
+Transcript show: 'OrderedCollection: ', orderedMean rounded asString, ' ms (variance: ', (orderedVariance roundTo: 0.01) asString, ')'; cr.
+```
 
-### Test Run 3: Performance Benchmark
-![](Performance-Bench.png)
-Using Pharo's bench method to measure sustained performance, measured in operations per 5 seconds. The results are:
-
-- **Array**: ~756 iterations/5sec
-- **Buffer**: ~351 iterations/5sec
-- **OrderedCollection**: ~170 iterations/5sec
+### Results (average execution time over 100 test runs):
+- **Array**: ~6 ms (variance: low)
+- **Buffer**: ~14 ms (variance: low) 
+- **OrderedCollection**: ~31 ms (variance: high)
 
 ### Why These Results Matter
 
-- **Array (Manual Management)**
-  - Fastest performance
-  - Requires manual index logic and careful boundary checks
-  - Easy to introduce bugs & Hard to maintain
+**Array** is fastest but requires complex manual index management and wraparound logic - easy to introduce bugs.
 
-- **Circular Buffer**
-  - Nearly as fast as arrays
-  - Delivers 43% of Array speed while eliminating 100% of the complexity
-  - Automatically manages size
-  - Clean, safe, and maintainable for most use cases
+**Buffer** delivers excellent performance while eliminating all complexity. It's built on arrays internally, so it inherits array access costs plus method call overhead, making it ~2.3x slower than raw arrays. However, this trade-off is worth it because you get 43% of array speed with zero complexity.
 
-- **OrderedCollection**
-  - Slowest performance
-  - Gets destroyed by `removeFirst` operations that shift hundreds of elements every time
-  - Not suitable for high-volume data management
+**OrderedCollection** has multiple serious problems:
+- **Slow removeFirst operations**: Shifts hundreds of elements every time
+- **Memory spikes**: When internal capacity is exceeded, it creates a new array double the size and copies all elements, causing temporary memory usage spikes
+
+This makes OrderedCollection unsuitable for high-volume streaming data or real-time applications.
