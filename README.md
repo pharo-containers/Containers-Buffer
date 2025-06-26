@@ -120,9 +120,10 @@ log := CTFIFOBuffer withCapacity: 1000.
 | Operation | OrderedCollection | Array | CTFIFOBuffer |
 |-----------|------------------|--------|-------------|
 | Add item | O(1) | O(1) | O(1) |
-| Remove old | O(n) | O(n) | O(1) |
+| Remove old | O(n) | O(1) | O(1) |
 | Memory usage | Unlimited growth | Fixed/reallocated | Fixed |
 
+**Note**: OrderedCollection can cause memory spikes - when capacity is exceeded, it creates a new array 2x the size and copies all elements over, leading to O(n) performance degradation. In contrast, CTFIFOBuffer maintains constant O(1) performance with fixed memory usage.
 
 ## Contributing
 
