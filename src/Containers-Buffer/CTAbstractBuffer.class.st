@@ -16,11 +16,21 @@ Class {
 }
 
 { #category : 'instance creation' }
-CTAbstractBuffer class >> withCapacity: anInteger [
+CTAbstractBuffer class >> new [
+
+	"Create a new buffer with default capacity"
+
+	^ self new: 10
+]
+
+{ #category : 'instance creation' }
+CTAbstractBuffer class >> new: anInteger [
+
+	"Create a new buffer with the specified capacity"
 
 	anInteger < 1 ifTrue: [ self error: 'Capacity must be positive' ].
-	^ self new
-		capacity: anInteger;
+	^ self basicNew
+		initializeWithCapacity: anInteger;
 		yourself
 ]
 
@@ -38,24 +48,6 @@ CTAbstractBuffer >> capacity [
 	"Return the maximum capacity of the buffer"
 	
 	^ capacity
-]
-
-{ #category : 'accessing' }
-CTAbstractBuffer >> capacity: anInteger [
-
-	capacity := anInteger.
-	elements := Array new: capacity
-]
-
-{ #category : 'actions' }
-CTAbstractBuffer >> clear [
-
-		"Remove all elements from the buffer"
-	
-	1 to: capacity do: [ :i | elements at: i put: nil ].
-	readIndex := 1.
-	writeIndex := 1.
-	currentSize := 0
 ]
 
 { #category : 'copying' }
@@ -80,7 +72,13 @@ CTAbstractBuffer >> elements [
 CTAbstractBuffer >> initialize [
 
 	super initialize.
-	capacity := 10.
+	self initializeWithCapacity: 10
+]
+
+{ #category : 'private' }
+CTAbstractBuffer >> initializeWithCapacity: anInteger [
+
+	capacity := anInteger.
 	elements := Array new: capacity.
 	readIndex := 1.
 	writeIndex := 1.
@@ -130,7 +128,7 @@ CTAbstractBuffer >> pop [
 	^ element
 ]
 
-{ #category : 'testing' }
+{ #category : 'adding' }
 CTAbstractBuffer >> push: anObject [
 	"Add an element to the buffer"
 
@@ -159,7 +157,7 @@ CTAbstractBuffer >> push: anObject [
 	^ anObject
 ]
 
-{ #category : 'testing' }
+{ #category : 'adding' }
 CTAbstractBuffer >> pushAll: aCollection [
 
 	aCollection do: [ :e | self push: e ].
@@ -171,6 +169,17 @@ CTAbstractBuffer >> readIndex [
 	
 
 	^ readIndex
+]
+
+{ #category : 'removing' }
+CTAbstractBuffer >> removeAll [
+
+	"Remove all elements from the buffer"
+	
+	1 to: capacity do: [ :i | elements at: i put: nil ].
+	readIndex := 1.
+	writeIndex := 1.
+	currentSize := 0
 ]
 
 { #category : 'accessing' }

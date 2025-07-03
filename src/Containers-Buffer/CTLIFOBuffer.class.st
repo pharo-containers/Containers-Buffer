@@ -14,18 +14,18 @@ CTLIFOBuffer >> copy [
 	"Return a copy of the LIFO buffer with same contents and order"
 
 	| copy index |
-	copy := self class withCapacity: capacity.
+	copy := self class new: capacity.
 	self isEmpty ifTrue: [ ^ copy ].
 
 	index := readIndex.
-	(currentSize - 1) timesRepeat: [
-		index := index = 1 ifTrue: [ capacity ] ifFalse: [ index - 1 ]
-	].
-	
+	currentSize - 1 timesRepeat: [
+			index := index = 1
+				         ifTrue: [ capacity ]
+				         ifFalse: [ index - 1 ] ].
+
 	currentSize timesRepeat: [
-		copy push: (elements at: index).
-		index := index \\ capacity + 1
-	].
+			copy push: (elements at: index).
+			index := index \\ capacity + 1 ].
 	^ copy
 ]
 

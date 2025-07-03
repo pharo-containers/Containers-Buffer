@@ -11,29 +11,30 @@ Class {
 
 { #category : 'running' }
 CTFIFOBufferTest >> setUp [
+
 	super setUp.
-	buffer := CTFIFOBuffer withCapacity: 3
+	buffer := CTFIFOBuffer new: 3
 ]
 
 { #category : 'tests' }
 CTFIFOBufferTest >> testChatMessageQueue [
 
 	| chatQueue displayedMessages |
-	chatQueue := CTFIFOBuffer withCapacity: 4.
+	chatQueue := CTFIFOBuffer new: 4.
 	displayedMessages := OrderedCollection new.
-	
+
 	chatQueue push: 'Alok: Hello everyone!'.
 	chatQueue push: 'Sebastian: Hey Alok!'.
 	chatQueue push: 'Gordana: How is everyone doing?'.
 	chatQueue push: 'Sebastian: Great to see you all!'.
-	
+
 	displayedMessages add: chatQueue pop.
 	self assert: displayedMessages last equals: 'Alok: Hello everyone!'.
-	
+
 	chatQueue push: 'Alok: Sorry I was late!'.
 	[ chatQueue isEmpty ] whileFalse: [
 		displayedMessages add: chatQueue pop ].
-	
+
 	self assert: displayedMessages size equals: 5.
 	self assert: (displayedMessages at: 2) equals: 'Sebastian: Hey Alok!'.
 	self assert: displayedMessages last equals: 'Alok: Sorry I was late!'

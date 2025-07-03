@@ -31,7 +31,7 @@ A Circular buffer is a fixed-size data structure that automatically overwrites t
 
 ```smalltalk
 "Circular buffer approach - elegant and efficient"
-recentMessages := CTFIFOBuffer withCapacity: 100.
+recentMessages := CTFIFOBuffer new: 100.
 recentMessages push: newMessage.  "That's it! Always O(1) & No Manual Cleanup"
 ```
 
@@ -46,7 +46,7 @@ FIFO buffers work like a queue - the first element added is the first one retrie
 
 ### Dry Run Example
 ```smalltalk
-buffer := CTFIFOBuffer withCapacity: 2.
+buffer := CTFIFOBuffer new: 2.
 buffer push: 'A'.     "Buffer state: [A, _] readIndex=1, writeIndex=2"
 buffer push: 'B'.     "Buffer state: [A, B] readIndex=1, writeIndex=1" 
 buffer push: 'C'.     "Buffer state: [C, B] readIndex=2, writeIndex=2 (A overwritten)"
@@ -60,7 +60,7 @@ buffer pop.           "Returns 'C', Buffer state: [_, _] (empty)"
 
 ```smalltalk
 "Chat room that keeps last 4 messages for display"
-chatHistory := CTFIFOBuffer withCapacity: 4.
+chatHistory := CTFIFOBuffer new: 4.
 
 "Users send messages throughout the day"
 chatHistory push: 'Alok: Hello everyone!'.
@@ -100,7 +100,7 @@ LIFO buffers work like a stack - the last element added is the first one retriev
 
 ### Dry Run Example
 ```smalltalk
-buffer := CTLIFOBuffer withCapacity: 2.
+buffer := CTLIFOBuffer new: 2.
 buffer push: 'A'.     "Buffer state: [A, _] readIndex=1, writeIndex=2"
 buffer push: 'B'.     "Buffer state: [A, B] readIndex=2, writeIndex=1"
 buffer push: 'C'.     "Buffer state: [C, B] readIndex=1, writeIndex=2 (A overwritten)"
@@ -114,7 +114,7 @@ buffer pop.           "Returns 'B', Buffer state: [_, _] (empty)"
 
 ```smalltalk
 "Browser that remembers last 3 visited pages"
-browserHistory := CTLIFOBuffer withCapacity: 3.
+browserHistory := CTLIFOBuffer new: 3.
 
 "User browses during the day"
 browserHistory push: 'https://pharo.org'.
@@ -180,7 +180,7 @@ Transcript show: 'Average result after running each benchmark for 100 times...';
     
     bufferResults add: ([
         | buffer |
-        buffer := CTFIFOBuffer withCapacity: capacity.
+        buffer := CTFIFOBuffer new: capacity.
         1 to: totalOperations do: [ :i |
             buffer push: i.
         ].

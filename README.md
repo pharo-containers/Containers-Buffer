@@ -50,7 +50,7 @@ This example demonstrates how to use a FIFO buffer to maintain a chat history, a
 
 ```smalltalk
 "Chat room - keep last 50 messages automatically"
-chat := CTFIFOBuffer withCapacity: 50.
+chat := CTFIFOBuffer new: 50.
 
 chat push: 'User1: Hello everyone!'.
 chat push: 'User2: How are you doing?'.
@@ -68,7 +68,7 @@ This example shows how to implement undo/redo functionality in an editor using a
 
 ```smalltalk
 "Implementing undo/redo in an editor"
-undoBuffer := CTLIFOBuffer withCapacity: 20.  "Keep last 20 actions"
+undoBuffer := CTLIFOBuffer new: 20.  "Keep last 20 actions"
 undoBuffer push: 'Hello World'.
 undoBuffer push: 'Add bold formatting'.
 undoBuffer push: 'Add italic formatting'.
@@ -86,7 +86,7 @@ This example demonstrates how to implement a simple browser history using a LIFO
 
 ```smalltalk
 "Browser back button - show most recent pages first"
-browserHistory := CTLIFOBuffer withCapacity: 20.
+browserHistory := CTLIFOBuffer new: 20.
 
 browserHistory push: 'https://pharo.org'.
 browserHistory push: 'https://github.com/pharo-containers'.
@@ -111,7 +111,7 @@ log := OrderedCollection new.
 ].
 
 "Buffer - Fast and automatic"
-log := CTFIFOBuffer withCapacity: 1000.
+log := CTFIFOBuffer new: 1000.
 1 to: 100000 do: [ :i |
     log push: 'entry ', i asString.  "O(1) operation - Automatic Management !"
 ].
