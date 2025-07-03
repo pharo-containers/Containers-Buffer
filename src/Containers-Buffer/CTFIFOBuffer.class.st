@@ -12,7 +12,7 @@ Class {
 CTFIFOBuffer >> copy [
 
 	| copy |
-	copy := self class withCapacity: capacity.
+	copy := self class new: capacity.
 	self do: [ :each | copy push: each ].
 	^ copy
 ]

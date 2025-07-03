@@ -34,8 +34,8 @@ CTAbstractBufferTest >> testAvailableSpace [
 CTAbstractBufferTest >> testBufferCreationWithCapacity [
 
 	| testBuffer |
-	testBuffer := buffer class withCapacity: 5.
-	
+	testBuffer := buffer class new: 5.
+
 	self assert: testBuffer capacity equals: 5.
 	self assert: testBuffer size equals: 0.
 	self assert: testBuffer isEmpty.
@@ -53,9 +53,12 @@ CTAbstractBufferTest >> testBufferCreationWithInvalidCapacity [
 { #category : 'tests' }
 CTAbstractBufferTest >> testClearBuffer [
 
-	buffer push: 'a'; push: 'b'; push: 'c'.
-	buffer clear.
-	
+	buffer
+		push: 'a';
+		push: 'b';
+		push: 'c'.
+	buffer removeAll.
+
 	self assert: buffer isEmpty.
 	self assert: buffer size equals: 0.
 	self assert: buffer readIndex equals: 1.
@@ -100,10 +103,13 @@ CTAbstractBufferTest >> testEmptyBufferErrors [
 { #category : 'tests' }
 CTAbstractBufferTest >> testIndicesAfterClear [
 
-	buffer push: 'a'; push: 'b'; push: 'c'.
+	buffer
+		push: 'a';
+		push: 'b';
+		push: 'c'.
 	buffer pop.
-	buffer clear.
-	
+	buffer removeAll.
+
 	self assert: buffer readIndex equals: 1.
 	self assert: buffer writeIndex equals: 1
 ]

@@ -11,34 +11,37 @@ Class {
 
 { #category : 'running' }
 CTLIFOBufferTest >> setUp [
-super setUp.
-	buffer := CTLIFOBuffer withCapacity: 3
+
+	super setUp.
+	buffer := CTLIFOBuffer new: 3
 ]
 
 { #category : 'tests' }
 CTLIFOBufferTest >> testBrowserHistory [
 
-| browserHistory visitedPages |
-	browserHistory := CTLIFOBuffer withCapacity: 3.
+	| browserHistory visitedPages |
+	browserHistory := CTLIFOBuffer new: 3.
 	visitedPages := OrderedCollection new.
-	
+
 	browserHistory push: 'https://google.com'.
 	browserHistory push: 'https://github.com/pharo-containers'.
 	browserHistory push: 'https://stackoverflow.com'.
 	browserHistory push: 'https://reddit.com'.
-	
+
 	visitedPages add: browserHistory pop.
 	self assert: visitedPages last equals: 'https://reddit.com'.
-	
+
 	browserHistory push: 'https://pharo.org'.
 	[ browserHistory isEmpty ] whileFalse: [
 		visitedPages add: browserHistory pop ].
-	
+
 	self assert: visitedPages size equals: 4.
 	self assert: visitedPages first equals: 'https://reddit.com'.
 	self assert: (visitedPages at: 2) equals: 'https://pharo.org'.
 	self assert: (visitedPages at: 3) equals: 'https://stackoverflow.com'.
-	self assert: visitedPages last equals: 'https://github.com/pharo-containers'
+	self
+		assert: visitedPages last
+		equals: 'https://github.com/pharo-containers'
 ]
 
 { #category : 'tests' }
