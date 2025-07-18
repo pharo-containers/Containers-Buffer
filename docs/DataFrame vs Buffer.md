@@ -20,7 +20,7 @@ Transcript show: 'Total Average Price: ', averagePrice asString; cr.
 This works perfectly for small files. But here's what happens when your CSV file grows from 1MB to 100MB to 1GB:
 
 **The Problems:**
-- **Memory Overhead**: DataFrames load the entire file into memory, which can be 10x larger than the file size itself. For a 1GB file, you might end up using 10GB of RAM.
+- **Memory Overhead**: DataFrames load the entire file into memory, which can be **100x larger** than the file size itself. For a 16MB file, you might end up using over 12GB of RAM.
 - **Garbage Collection**: As the DataFrame grows, garbage collection kicks in frequently, slowing down your program. This is because DataFrames create many temporary objects that need to be cleaned up.
 - **Performance**: Calculating the average involves iterating through potentially millions of rows, which can take a long time. The more data you have, the slower it gets.
 - **Crashes**: If the file is larger than your available RAM, you get "Out of Memory" errors, causing your program to crash.
@@ -76,6 +76,9 @@ Transcript show: 'Generated file: ', (stockDataFile asFileReference size / 1024 
 ```
 This code generates a CSV file with 500,000 rows of realistic stock market data, including serial numbers, prices, daily lows, and highs. Each price is a random fluctuation around the previous day's price.
 ## Performance Testing: The Numbers Tell the Story
+
+> **Important Note for Benchmarking**: Before running these benchmarks, please disable background processes & ensure your system is not under heavy load. This will help ensure accurate and consistent benchmark results.
+
 Now let's compare the performance of the DataFrame approach with the circular buffer approach for calculating moving averages.
 
 ### Test Setup
@@ -84,12 +87,13 @@ Now let's compare the performance of the DataFrame approach with the circular bu
 Transcript show: 'Testing DataFrame approach...'; cr.
 3 timesRepeat: [ Smalltalk garbageCollect ].
 [
-    | startTime endTime memoryBefore memoryAfter gcBefore gcAfter gcTimeBefore gcTimeAfter 
-		stockData priceColumn movingAverages |
+    | startTime endTime allocatedMemory numberOfScavenges numberOfFullGCs totalGCTime
+      stockData priceColumn movingAverages |
     
-	 memoryBefore := Smalltalk vm parameterAt: 3.
-    gcBefore := (Smalltalk vm parameterAt: 7) + (Smalltalk vm parameterAt: 9).
-    gcTimeBefore := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
+    allocatedMemory := Smalltalk vm parameterAt: 34.
+    numberOfScavenges := Smalltalk vm parameterAt: 9.
+    numberOfFullGCs := Smalltalk vm parameterAt: 7.
+    totalGCTime := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
     startTime := Time millisecondClockValue.
     
     "Load entire dataset"
@@ -110,14 +114,17 @@ Transcript show: 'Testing DataFrame approach...'; cr.
     ].
     
     endTime := Time millisecondClockValue.
-    memoryAfter := Smalltalk vm parameterAt: 3.
-    gcAfter := (Smalltalk vm parameterAt: 7) + (Smalltalk vm parameterAt: 9).
-    gcTimeAfter := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
+    allocatedMemory := (Smalltalk vm parameterAt: 34) - allocatedMemory.
+    numberOfScavenges := (Smalltalk vm parameterAt: 9) - numberOfScavenges.
+    numberOfFullGCs := (Smalltalk vm parameterAt: 7) - numberOfFullGCs.
+    totalGCTime := ((Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10)) - totalGCTime.
+    
     Transcript show: 'DataFrame Test Results:'; cr.
     Transcript show: '   Time: ', (endTime - startTime) asString, ' ms'; cr.
-    Transcript show: '   Memory: ', ((memoryAfter - memoryBefore) / 1024 / 1024) rounded asString, ' MB'; cr.
-    Transcript show: '   GC Events: ', (gcAfter - gcBefore) asString; cr.
-	 Transcript show: '   GC Time: ', (gcTimeAfter - gcTimeBefore) asString, ' ms'; cr.
+    Transcript show: '   Memory Allocated: ', (allocatedMemory / 1024 / 1024) rounded asString, ' MB'; cr.
+    Transcript show: '   Scavenges: ', numberOfScavenges asString; cr.
+    Transcript show: '   Full GCs: ', numberOfFullGCs asString; cr.
+    Transcript show: '   Total GC Time: ', totalGCTime asString, ' ms'; cr.
     Transcript show: '   Moving Averages: ', movingAverages size asString; cr.
     Transcript show: '   Final MA: $', (movingAverages last roundTo: 0.01) asString; cr; cr.
     
@@ -132,12 +139,13 @@ Transcript show: 'Testing Buffer approach...'; cr.
 
 3 timesRepeat: [ Smalltalk garbageCollect ].
 [
-    | startTime endTime memoryBefore memoryAfter gcBefore gcAfter gcTimeBefore gcTimeAfter
+    | startTime endTime allocatedMemory numberOfScavenges numberOfFullGCs totalGCTime
       priceBuffer movingAverages processedCount |
     
-    memoryBefore := Smalltalk vm parameterAt: 3.
-    gcBefore := (Smalltalk vm parameterAt: 7) + (Smalltalk vm parameterAt: 9).
-    gcTimeBefore := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
+    allocatedMemory := Smalltalk vm parameterAt: 34.
+    numberOfScavenges := Smalltalk vm parameterAt: 9.
+    numberOfFullGCs := Smalltalk vm parameterAt: 7.
+    totalGCTime := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
     startTime := Time millisecondClockValue.
     
     priceBuffer := CTFIFOBuffer new: windowSize.
@@ -172,15 +180,17 @@ Transcript show: 'Testing Buffer approach...'; cr.
     ].
     
     endTime := Time millisecondClockValue.
-    memoryAfter := Smalltalk vm parameterAt: 3.
-    gcAfter := (Smalltalk vm parameterAt: 7) + (Smalltalk vm parameterAt: 9).
-    gcTimeAfter := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
+    allocatedMemory := (Smalltalk vm parameterAt: 34) - allocatedMemory.
+    numberOfScavenges := (Smalltalk vm parameterAt: 9) - numberOfScavenges.
+    numberOfFullGCs := (Smalltalk vm parameterAt: 7) - numberOfFullGCs.
+    totalGCTime := ((Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10)) - totalGCTime.
     
     Transcript show: 'Buffer Results:'; cr.
     Transcript show: '   Time: ', (endTime - startTime) asString, ' ms'; cr.
-    Transcript show: '   Memory: ', ((memoryAfter - memoryBefore) / 1024 / 1024) rounded asString, ' MB'; cr.
-    Transcript show: '   GC Events: ', (gcAfter - gcBefore) asString; cr.
-	 Transcript show: '   GC Time: ', (gcTimeAfter - gcTimeBefore) asString, ' ms'; cr.
+    Transcript show: '   Memory Allocated: ', (allocatedMemory / 1024 / 1024) rounded asString, ' MB'; cr.
+    Transcript show: '   Scavenges: ', numberOfScavenges asString; cr.
+    Transcript show: '   Full GCs: ', numberOfFullGCs asString; cr.
+    Transcript show: '   Total GC Time: ', totalGCTime asString, ' ms'; cr.
     Transcript show: '   Moving Averages: ', movingAverages size asString; cr.
     Transcript show: '   Final MA: $', (movingAverages last roundTo: 0.01) asString; cr; cr.
 ] value.
@@ -195,19 +205,20 @@ Transcript show: 'Tests Done!'; cr.
 Here are the results from running this benchmark on a 500,000-row dataset (approximately 15MB file):
 | Metric | DataFrame | Circular Buffer | Improvement |
 |--------|-----------|-----------------|-------------|
-| **Execution Time** | ~15,100 ms | ~2,100 ms | **7.2x faster** |
-| **Memory Usage** | ~128 MB | ~16 MB | **8x less memory** |
-| **GC Events** | ~870 | ~52 | **94% fewer** |
-| **GC Time** | ~3,500 ms | ~3 ms | **1200x less GC overhead** |
+| **Execution Time** | 14,986 ms | 2,136 ms | **7.0x faster** |
+| **Memory Allocated** | 12,914 MB | 785 MB | **16.4x less memory** |
+| **Scavenges** | 867 | 52 | **94% fewer** |
+| **Full GCs** | 4 | 0 | **100% fewer** |
+| **Total GC Time** | 3,769 ms | 3 ms | **1,256x less GC overhead** |
 | **Results Generated** | 499,901 | 499,901 | Identical accuracy |
 
 *Note: Results may vary based on your hardware, Pharo version, and system load*
 
 **Key Insights:**
-- Circular buffers processed the same data **7.2x faster**
-- Used **8x less memory** despite processing the same amount of data
-- Had **94% fewer garbage collection events**, leading to smoother performance
-- Spent virtually no time on memory cleanup (3ms vs 3.5+ seconds)
+- Circular buffers processed the same data **7.0x faster**
+- Used **16.4x less memory** despite processing the same amount of data  
+- Had **94% fewer scavenges and eliminated all full GCs**, leading to smoother performance
+- Spent virtually no time on garbage collection (3ms vs 3.8+ seconds)
 - Produced identical results, proving accuracy isn't compromised
 
 ## When to Use Each Approach
