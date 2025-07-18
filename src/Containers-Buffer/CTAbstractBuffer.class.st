@@ -25,13 +25,24 @@ CTAbstractBuffer class >> new [
 
 { #category : 'instance creation' }
 CTAbstractBuffer class >> new: anInteger [
-
 	"Create a new buffer with the specified capacity"
 
 	anInteger < 1 ifTrue: [ self error: 'Capacity must be positive' ].
 	^ self basicNew
-		initializeWithCapacity: anInteger;
-		yourself
+		  setupWithCapacity: anInteger;
+		  yourself
+]
+
+{ #category : 'adding' }
+CTAbstractBuffer >> add: anObject [
+
+	^ self push: anObject 
+]
+
+{ #category : 'adding' }
+CTAbstractBuffer >> addAll: aCollection [
+
+	^ self pushAll: aCollection 
 ]
 
 { #category : 'accessing' }
@@ -66,23 +77,6 @@ CTAbstractBuffer >> do: aBlock [
 CTAbstractBuffer >> elements [
 
 	^ elements
-]
-
-{ #category : 'initialization' }
-CTAbstractBuffer >> initialize [
-
-	super initialize.
-	self initializeWithCapacity: 10
-]
-
-{ #category : 'private' }
-CTAbstractBuffer >> initializeWithCapacity: anInteger [
-
-	capacity := anInteger.
-	elements := Array new: capacity.
-	readIndex := 1.
-	writeIndex := 1.
-	currentSize := 0
 ]
 
 { #category : 'testing' }
@@ -177,6 +171,16 @@ CTAbstractBuffer >> removeAll [
 	"Remove all elements from the buffer"
 	
 	1 to: capacity do: [ :i | elements at: i put: nil ].
+	readIndex := 1.
+	writeIndex := 1.
+	currentSize := 0
+]
+
+{ #category : 'private' }
+CTAbstractBuffer >> setupWithCapacity: anInteger [
+
+	capacity := anInteger.
+	elements := Array new: capacity.
 	readIndex := 1.
 	writeIndex := 1.
 	currentSize := 0
