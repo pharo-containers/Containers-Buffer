@@ -17,6 +17,26 @@ CTFIFOBufferTest >> setUp [
 ]
 
 { #category : 'tests' }
+CTFIFOBufferTest >> testAddAlias [
+
+	buffer add: 'first'.
+	self assert: buffer size equals: 1.
+	self assert: buffer peek equals: 'first'.
+	
+	buffer add: 'second'.
+	self assert: buffer size equals: 2
+]
+
+{ #category : 'tests' }
+CTFIFOBufferTest >> testAddAllAlias [
+
+	| result |
+	result := buffer addAll: #( 'a' 'b' 'c' ).
+	self assert: buffer size equals: 3.
+	self assert: buffer isFull
+]
+
+{ #category : 'tests' }
 CTFIFOBufferTest >> testChatMessageQueue [
 
 	| chatQueue displayedMessages |
