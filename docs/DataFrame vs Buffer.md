@@ -1,11 +1,12 @@
 # DataFrames vs Circular Buffers: Processing Large Datasets Efficiently in Pharo
 
-When processing large datasets in Pharo, developers typically reach for DataFrames and for good reason. They provide a powerful way to manipulate and analyze data, similar to how you would in Python or R. However, there's a hidden problem that many developers overlook: DataFrames can be inefficient and even detrimental to performance when dealing with large files.
+When processing large datasets in Pharo, developers typically reach for DataFrames and for good reason. They provide a powerful way to manipulate and analyze data, similar to proven solutions like [Pandas in Python](https://pandas.pydata.org/), [data.frame in R](https://www.r-project.org/), or [Pharo's DataFrame implementation](https://github.com/PolyMathOrg/DataFrame). DataFrames excel at complex operations like joins, grouping, statistical analysis, and data exploration. However, not all data processing tasks require loading an entire dataset into memory. For certain problems, especially those involving massive files and streaming computations, a more specialized tool can offer significant performance benefits. This is where a circular buffer shines.
 
-In this article, we'll explore why DataFrames can hurt performance, how circular buffers can be a better alternative, and provide practical examples to illustrate the differences. We'll also cover how to generate test data and measure performance effectively.
+In this article, we'll explore when each approach shines, provide practical examples with realistic large datasets, and demonstrate how choosing the right data structure can dramatically improve performance for specific use cases.
 
-## The Hidden Problem: Why DataFrames Can Hurt Performance
-Let me show you a common scenario that many developers face when working with DataFrames. Imagine you have a CSV file with stock prices, and you want to calculate the average price. Here's how you might do it using DataFrames:
+## Understanding the Trade-offs
+
+Let's consider a common task: Calculating the average price from a CSV file of stock data. With a DataFrame, the approach is straightforward. Here's how you might do it using DataFrames:
 
 ```smalltalk
 stockDataFile := 'stock_data.csv'.
@@ -17,17 +18,14 @@ averagePrice := priceColumn average.
 Transcript show: 'Total Average Price: ', averagePrice asString; cr.
 ```
 
-This works perfectly for small files. But here's what happens when your CSV file grows from 1MB to 100MB to 1GB:
+This works beautifully for moderately sized files. But what happens when your dataset isn't just a few megabytes, but grows to 20GB, 100GB, or even larger? In these real-world scenarios, loading the entire file into memory can lead to significant challenges:
 
 **The Problems:**
-- **Memory Overhead**: DataFrames load the entire file into memory, which can be **100x larger** than the file size itself. For a 16MB file, you might end up using over 12GB of RAM.
 - **Garbage Collection**: As the DataFrame grows, garbage collection kicks in frequently, slowing down your program. This is because DataFrames create many temporary objects that need to be cleaned up.
 - **Performance**: Calculating the average involves iterating through potentially millions of rows, which can take a long time. The more data you have, the slower it gets.
-- **Crashes**: If the file is larger than your available RAM, you get "Out of Memory" errors, causing your program to crash.
+- **Extreme Memory Pressure**: If a dataset is larger than the available RAM, the operating system starts using the hard disk as virtual memory. This process will make your program very slow, as disk access is orders of magnitude slower than RAM access.
 
-
-Think of it like this: you want to know the average height of people in a room, so you ask everyone to stand in line and write down everyone's details in a notebook. That's what DataFrames do - they store everything, even when you only need one number.
-
+Think of it this way: to find the average height of people in a large crowd, you don't need a detailed notebook with everyone's name, age, and address. You just need to sum their heights and divide by the count. The circular buffer approach is like having a simple calculator and notepad, it only keeps the information essential for the immediate task.
 
 ## Moving Averages: A Practical Example
 Let's take this a step further and calculate moving averages, which is a common task in financial applications. We'll compare the DataFrame approach with the circular buffer approach.
@@ -38,7 +36,7 @@ Let's generate some realistic test data to see how these two approaches perform 
 | stockDataFile rowCount windowSize |
 
 stockDataFile := 'moving_avg_test.csv'.
-rowCount := 500000.
+rowCount := 8000000.
 windowSize := 100.
 
 "Clean up any old files"
@@ -48,37 +46,41 @@ stockDataFile asFileReference exists ifTrue: [
 
 Transcript show: 'BENCHMARK: Moving Average - DataFrame vs Streaming Buffer'; cr.
 
-"Generate simple test data"
 Transcript show: 'Generating test data...'; cr.
 stockDataFile asFileReference writeStreamDo: [ :stream |
     | currentPrice |
-    currentPrice := 100.0.
-    stream nextPutAll: 'S.No.,Price,Low,High'; cr.
-    
+    currentPrice := 150.0.
+
+    stream nextPutAll: 'S.No.,Symbol,Price,Volume,Low,High,OpenInterest'; cr.
+
     1 to: rowCount do: [ :day |
-        | priceChange newPrice lowPrice highPrice |
-        priceChange := (Random new next - 0.5) * 2.0.  "±$1 change"
-        newPrice := currentPrice + priceChange.
+        | priceChange newPrice lowPrice highPrice volume openInterest |
+        priceChange := (Random new next - 0.5) * 2.0.
+        newPrice := (currentPrice + priceChange) max: 1.0.
+        lowPrice := newPrice - (Random new next * 2.0).
+        highPrice := newPrice + (Random new next * 2.0).
         
-        "Generate realistic Low and High values around the price"
-        lowPrice := newPrice - (Random new next * 2.0).  "Low is below price"
-        highPrice := newPrice + (Random new next * 2.0). "High is above price"
-        
-        stream nextPutAll: day asString, ',',
-                          (newPrice roundTo: 0.01) asString, ',',
-                          (lowPrice roundTo: 0.01) asString, ',',
-                          (highPrice roundTo: 0.01) asString; cr.
-        
+        volume := 50000 + (1950000 atRandom) rounded.
+        openInterest := 1000 + (49000 atRandom) rounded.
+
+        stream
+            nextPutAll: day asString; nextPut: $,;
+            nextPutAll: 'PHARO-STOCK'; nextPut: $,;
+            nextPutAll: (newPrice roundTo: 0.01) asString; nextPut: $,;
+            nextPutAll: volume asString; nextPut: $,;
+            nextPutAll: (lowPrice roundTo: 0.01) asString; nextPut: $,;
+            nextPutAll: (highPrice roundTo: 0.01) asString; nextPut: $,;
+            nextPutAll: openInterest asString; cr.
+
         currentPrice := newPrice.
     ].
 ].
 Transcript show: 'Generated file: ', (stockDataFile asFileReference size / 1024 / 1024) rounded asString, ' MB'; cr; cr.
 ```
-This code generates a CSV file with 500,000 rows of realistic stock market data, including serial numbers, prices, daily lows, and highs. Each price is a random fluctuation around the previous day's price.
+
+This code generates a CSV file with 8,000,000 rows of stock data, simulating daily price changes. Each row contains columns for the stock symbol, price, volume, low, high, and open interest.
+
 ## Performance Testing: The Numbers Tell the Story
-
-> **Important Note for Benchmarking**: Before running these benchmarks, please disable background processes & ensure your system is not under heavy load. This will help ensure accurate and consistent benchmark results.
-
 Now let's compare the performance of the DataFrame approach with the circular buffer approach for calculating moving averages.
 
 ### Test Setup
@@ -87,13 +89,12 @@ Now let's compare the performance of the DataFrame approach with the circular bu
 Transcript show: 'Testing DataFrame approach...'; cr.
 3 timesRepeat: [ Smalltalk garbageCollect ].
 [
-    | startTime endTime allocatedMemory numberOfScavenges numberOfFullGCs totalGCTime
-      stockData priceColumn movingAverages |
+    | startTime endTime memoryBefore memoryAfter gcBefore gcAfter gcTimeBefore gcTimeAfter 
+		stockData priceColumn movingAverages |
     
-    allocatedMemory := Smalltalk vm parameterAt: 34.
-    numberOfScavenges := Smalltalk vm parameterAt: 9.
-    numberOfFullGCs := Smalltalk vm parameterAt: 7.
-    totalGCTime := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
+	 memoryBefore := Smalltalk vm parameterAt: 3.
+    gcBefore := (Smalltalk vm parameterAt: 7) + (Smalltalk vm parameterAt: 9).
+    gcTimeBefore := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
     startTime := Time millisecondClockValue.
     
     "Load entire dataset"
@@ -114,17 +115,14 @@ Transcript show: 'Testing DataFrame approach...'; cr.
     ].
     
     endTime := Time millisecondClockValue.
-    allocatedMemory := (Smalltalk vm parameterAt: 34) - allocatedMemory.
-    numberOfScavenges := (Smalltalk vm parameterAt: 9) - numberOfScavenges.
-    numberOfFullGCs := (Smalltalk vm parameterAt: 7) - numberOfFullGCs.
-    totalGCTime := ((Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10)) - totalGCTime.
-    
+    memoryAfter := Smalltalk vm parameterAt: 3.
+    gcAfter := (Smalltalk vm parameterAt: 7) + (Smalltalk vm parameterAt: 9).
+    gcTimeAfter := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
     Transcript show: 'DataFrame Test Results:'; cr.
     Transcript show: '   Time: ', (endTime - startTime) asString, ' ms'; cr.
-    Transcript show: '   Memory Allocated: ', (allocatedMemory / 1024 / 1024) rounded asString, ' MB'; cr.
-    Transcript show: '   Scavenges: ', numberOfScavenges asString; cr.
-    Transcript show: '   Full GCs: ', numberOfFullGCs asString; cr.
-    Transcript show: '   Total GC Time: ', totalGCTime asString, ' ms'; cr.
+    Transcript show: '   Memory: ', ((memoryAfter - memoryBefore) / 1024 / 1024) rounded asString, ' MB'; cr.
+    Transcript show: '   GC Events: ', (gcAfter - gcBefore) asString; cr.
+	 Transcript show: '   GC Time: ', (gcTimeAfter - gcTimeBefore) asString, ' ms'; cr.
     Transcript show: '   Moving Averages: ', movingAverages size asString; cr.
     Transcript show: '   Final MA: $', (movingAverages last roundTo: 0.01) asString; cr; cr.
     
@@ -139,35 +137,29 @@ Transcript show: 'Testing Buffer approach...'; cr.
 
 3 timesRepeat: [ Smalltalk garbageCollect ].
 [
-    | startTime endTime allocatedMemory numberOfScavenges numberOfFullGCs totalGCTime
-      priceBuffer movingAverages processedCount |
-    
-    allocatedMemory := Smalltalk vm parameterAt: 34.
-    numberOfScavenges := Smalltalk vm parameterAt: 9.
-    numberOfFullGCs := Smalltalk vm parameterAt: 7.
-    totalGCTime := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
+    | startTime endTime memoryBefore memoryAfter gcBefore gcAfter gcTimeBefore gcTimeAfter priceBuffer movingAverages |
+
+    memoryBefore := Smalltalk vm parameterAt: 3.
+    gcBefore := (Smalltalk vm parameterAt: 7) + (Smalltalk vm parameterAt: 9).
+    gcTimeBefore := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
     startTime := Time millisecondClockValue.
     
     priceBuffer := CTFIFOBuffer new: windowSize.
     movingAverages := OrderedCollection new.
-    processedCount := 0.
-    
+
     stockDataFile asFileReference readStreamDo: [ :fileStream |
-        | line |
         fileStream atEnd ifFalse: [ fileStream nextLine ].
         
         [ fileStream atEnd ] whileFalse: [
+            | line |
             line := fileStream nextLine.
             
             line ifNotEmpty: [
                 | csvParts price |
                 csvParts := line splitOn: ','.
-                price := (csvParts at: 2) asNumber.  "Price is 2nd column"
-                
+                price := (csvParts at: 3) asNumber.
                 priceBuffer push: price.
-                processedCount := processedCount + 1.
-                
-                "Calculate moving average when buffer is full"
+
                 priceBuffer isFull ifTrue: [
                     | bufferSum movingAvg |
                     bufferSum := 0.
@@ -180,17 +172,15 @@ Transcript show: 'Testing Buffer approach...'; cr.
     ].
     
     endTime := Time millisecondClockValue.
-    allocatedMemory := (Smalltalk vm parameterAt: 34) - allocatedMemory.
-    numberOfScavenges := (Smalltalk vm parameterAt: 9) - numberOfScavenges.
-    numberOfFullGCs := (Smalltalk vm parameterAt: 7) - numberOfFullGCs.
-    totalGCTime := ((Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10)) - totalGCTime.
+    memoryAfter := Smalltalk vm parameterAt: 3.
+    gcAfter := (Smalltalk vm parameterAt: 7) + (Smalltalk vm parameterAt: 9).
+    gcTimeAfter := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
     
     Transcript show: 'Buffer Results:'; cr.
     Transcript show: '   Time: ', (endTime - startTime) asString, ' ms'; cr.
-    Transcript show: '   Memory Allocated: ', (allocatedMemory / 1024 / 1024) rounded asString, ' MB'; cr.
-    Transcript show: '   Scavenges: ', numberOfScavenges asString; cr.
-    Transcript show: '   Full GCs: ', numberOfFullGCs asString; cr.
-    Transcript show: '   Total GC Time: ', totalGCTime asString, ' ms'; cr.
+    Transcript show: '   Memory: ', ((memoryAfter - memoryBefore) / 1024 / 1024) rounded asString, ' MB'; cr.
+    Transcript show: '   GC Events: ', (gcAfter - gcBefore) asString; cr.
+	 Transcript show: '   GC Time: ', (gcTimeAfter - gcTimeBefore) asString, ' ms'; cr.
     Transcript show: '   Moving Averages: ', movingAverages size asString; cr.
     Transcript show: '   Final MA: $', (movingAverages last roundTo: 0.01) asString; cr; cr.
 ] value.
@@ -202,53 +192,49 @@ Transcript show: 'Tests Done!'; cr.
 ```
 
 ### Benchmark Results
-Here are the results from running this benchmark on a 500,000-row dataset (approximately 15MB file):
+
+Here are the results from running this benchmark on a 8,000,000 row dataset (approximately 450MB file):
+
 | Metric | DataFrame | Circular Buffer | Improvement |
 |--------|-----------|-----------------|-------------|
-| **Execution Time** | 14,986 ms | 2,136 ms | **7.0x faster** |
-| **Memory Allocated** | 12,914 MB | 785 MB | **16.4x less memory** |
-| **Scavenges** | 867 | 52 | **94% fewer** |
-| **Full GCs** | 4 | 0 | **100% fewer** |
-| **Total GC Time** | 3,769 ms | 3 ms | **1,256x less GC overhead** |
-| **Results Generated** | 499,901 | 499,901 | Identical accuracy |
+| **Execution Time** | ~968,804 ms | ~46,258 ms | **21x faster** |
+| **Memory Usage** | ~1,184 MB | ~112 MB | **10.6x less memory** |
+| **GC Events** | ~14,943 | ~944 | **94% fewer** |
+| **GC Time** | ~826,382 ms | ~405 ms | **2,040x less GC overhead** |
+| **Results Generated** | 7,999,901 | 7,999,901 | Identical accuracy |
 
 *Note: Results may vary based on your hardware, Pharo version, and system load*
 
 **Key Insights:**
-- Circular buffers processed the same data **7.0x faster**
-- Used **16.4x less memory** despite processing the same amount of data  
-- Had **94% fewer scavenges and eliminated all full GCs**, leading to smoother performance
-- Spent virtually no time on garbage collection (3ms vs 3.8+ seconds)
+- Circular buffers processed the same data **21x faster**
+- Used **10.6x less memory** despite processing the same amount of data
+- Had **94% fewer garbage collection events**, leading to smoother performance
+- Spent virtually no time on memory cleanup (405ms vs 826+ seconds)
 - Produced identical results, proving accuracy isn't compromised
 
 ## When to Use Each Approach
+Choosing between a DataFrame and a Circular Buffer isn't about which is "better", it's about picking the right tool for the job.
 
 ### Use DataFrames When:
-- Your entire dataset comfortably fits in memory (under 100MB typically)
+- Your entire dataset comfortably fits in memory
 - You need complex operations like joins, group-by, or statistical functions
 - You're doing one-time analysis where you explore data interactively
-- You need to sort, filter, or query data in complex ways
 
 ### Use Circular Buffers When:
-- Processing large files (over 100MB)
-- Computing simple statistics (averages, sums, counts)
-- Building real-time systems that process continuous data streams
-- Working with memory-limited environments
 - Processing data bigger than your available RAM
+- Working with memory-limited environments
+- You only need to look at a small, sliding "window" of data at a time (like for a moving average)
 
 ## Try It Yourself
 
-1. Generate some test data using the code above
-2. Run both approaches on files of different sizes
-3. Watch the memory usage and timing differences
-4. See how circular buffers handle files bigger than your RAM
+1. Generate test data using the code above
+2. Run both approaches & compare the results
 
 You'll be surprised at how much faster your programs can run when you choose the right data structure for the job.
 
 ## Summary
-In this article, we explored the limitations of DataFrames when processing large datasets in Pharo and introduced circular buffers as a more efficient alternative. We demonstrated how circular buffers can handle large files without running out of memory, while also being significantly faster for simple computations like averages and moving averages.
+DataFrames are, and will remain, an essential, powerful, and correct choice for a wide range of data analysis tasks. Their flexibility for interactive exploration is unmatched when working with datasets that fit in memory. 
 
-We also provided practical examples of generating test data and measuring performance for both approaches. The key takeaway is that sometimes the simplest solution is the fastest solution, especially when dealing with large datasets.
-
+However, when dataset is massive & we need only simple manipulations like calculating moving averages which we could do with a sliding window without loading everything into memory, a circular buffer can provide significant performance benefits. The key takeaway is to understand your data processing needs and choose the right tool for the job.
 
 Want to explore more? Check out the [Containers-Buffer repository](https://github.com/pharo-containers/Containers-Buffer) to see the complete implementation and examples.
