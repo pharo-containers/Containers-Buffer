@@ -92,7 +92,7 @@ Transcript show: 'Testing DataFrame approach...'; cr.
     | startTime endTime memoryBefore memoryAfter gcBefore gcAfter gcTimeBefore gcTimeAfter 
 		stockData priceColumn movingAverages |
     
-	 memoryBefore := Smalltalk vm parameterAt: 3.
+	 memoryBefore := Smalltalk vm parameterAt: 34.
     gcBefore := (Smalltalk vm parameterAt: 7) + (Smalltalk vm parameterAt: 9).
     gcTimeBefore := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
     startTime := Time millisecondClockValue.
@@ -115,7 +115,7 @@ Transcript show: 'Testing DataFrame approach...'; cr.
     ].
     
     endTime := Time millisecondClockValue.
-    memoryAfter := Smalltalk vm parameterAt: 3.
+    memoryAfter := Smalltalk vm parameterAt: 34.
     gcAfter := (Smalltalk vm parameterAt: 7) + (Smalltalk vm parameterAt: 9).
     gcTimeAfter := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
     Transcript show: 'DataFrame Test Results:'; cr.
@@ -139,7 +139,7 @@ Transcript show: 'Testing Buffer approach...'; cr.
 [
     | startTime endTime memoryBefore memoryAfter gcBefore gcAfter gcTimeBefore gcTimeAfter priceBuffer movingAverages |
 
-    memoryBefore := Smalltalk vm parameterAt: 3.
+    memoryBefore := Smalltalk vm parameterAt: 34.
     gcBefore := (Smalltalk vm parameterAt: 7) + (Smalltalk vm parameterAt: 9).
     gcTimeBefore := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
     startTime := Time millisecondClockValue.
@@ -172,7 +172,7 @@ Transcript show: 'Testing Buffer approach...'; cr.
     ].
     
     endTime := Time millisecondClockValue.
-    memoryAfter := Smalltalk vm parameterAt: 3.
+    memoryAfter := Smalltalk vm parameterAt: 34.
     gcAfter := (Smalltalk vm parameterAt: 7) + (Smalltalk vm parameterAt: 9).
     gcTimeAfter := (Smalltalk vm parameterAt: 8) + (Smalltalk vm parameterAt: 10).
     
@@ -198,7 +198,7 @@ Here are the results from running this benchmark on a 8,000,000 row dataset (app
 | Metric | DataFrame | Circular Buffer | Improvement |
 |--------|-----------|-----------------|-------------|
 | **Execution Time** | ~968,804 ms | ~46,258 ms | **21x faster** |
-| **Memory Usage** | ~1,184 MB | ~112 MB | **10.6x less memory** |
+| **Memory Usage** | ~222,730 MB | ~14,148 MB | **16x less memory** |
 | **GC Events** | ~14,943 | ~944 | **94% fewer** |
 | **GC Time** | ~826,382 ms | ~405 ms | **2,040x less GC overhead** |
 | **Results Generated** | 7,999,901 | 7,999,901 | Identical accuracy |
