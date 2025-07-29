@@ -198,7 +198,7 @@ Here are the results from running this benchmark on a 8,000,000 row dataset (app
 | Metric | DataFrame | Circular Buffer | Improvement |
 |--------|-----------|-----------------|-------------|
 | **Execution Time** | ~968,804 ms | ~46,258 ms | **21x faster** |
-| **Memory Usage** | ~222,730 MB | ~14,148 MB | **16x less memory** |
+| **Memory Usage** | ~223 GB | ~14 GB | **~16x smaller growth** |
 | **GC Events** | ~14,943 | ~944 | **94% fewer** |
 | **GC Time** | ~826,382 ms | ~405 ms | **2,040x less GC overhead** |
 | **Results Generated** | 7,999,901 | 7,999,901 | Identical accuracy |
@@ -207,7 +207,7 @@ Here are the results from running this benchmark on a 8,000,000 row dataset (app
 
 **Key Insights:**
 - Circular buffers processed the same data **21x faster**
-- Used **10.6x less memory** despite processing the same amount of data
+- Used **16x less memory** despite processing the same amount of data
 - Had **94% fewer garbage collection events**, leading to smoother performance
 - Spent virtually no time on memory cleanup (405ms vs 826+ seconds)
 - Produced identical results, proving accuracy isn't compromised
@@ -236,5 +236,7 @@ You'll be surprised at how much faster your programs can run when you choose the
 DataFrames are, and will remain, an essential, powerful, and correct choice for a wide range of data analysis tasks. Their flexibility for interactive exploration is unmatched when working with datasets that fit in memory. 
 
 However, when dataset is massive & we need only simple manipulations like calculating moving averages which we could do with a sliding window without loading everything into memory, a circular buffer can provide significant performance benefits. The key takeaway is to understand your data processing needs and choose the right tool for the job.
+
+**Note:** It is also fair to mention that other DataFrame libraries vary significantly in optimization and performance. Libraries like [Pandas in Python](https://pandas.pydata.org/) are heavily optimized with specialized type systems, C extensions, and native computational libraries. Pharo's DataFrame implementation, while powerful and growing, has not yet reached that level of optimization. For this reason, if one were to repeat this benchmark with a more optimized DataFrame library, the performance difference would likely be smaller.
 
 Want to explore more? Check out the [Containers-Buffer repository](https://github.com/pharo-containers/Containers-Buffer) to see the complete implementation and examples.
